@@ -1,6 +1,8 @@
 package com.behl.salamanca.service;
 
+import java.util.HashMap;
 import java.util.Random;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -10,6 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.behl.salamanca.constant.OtpContext;
 import com.behl.salamanca.dto.OtpVerificationRequestDto;
 import com.behl.salamanca.dto.UserAccountCreationRequestDto;
 import com.behl.salamanca.dto.UserLoginRequestDto;
@@ -42,6 +45,7 @@ public class UserService {
         user.setEmailId(userAccountCreationRequestDto.getEmailId());
         user.setPassword(passwordEncoder.encode(userAccountCreationRequestDto.getPassword()));
         user.setEmailVerified(false);
+        user.setActive(true);
         final var savedUser = userRepository.save(user);
 
         sendOtp(savedUser, "Verify your account");
@@ -55,6 +59,9 @@ public class UserService {
         if (!passwordEncoder.matches(userLoginRequestDto.getPassword(), user.getPassword()))
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid login credentials");
 
+        if (!user.isActive())
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Account not active");
+
         sendOtp(user, "2FA: Request to log in to your account");
         return ResponseEntity.ok().build();
     }
@@ -62,11 +69,6 @@ public class UserService {
     public ResponseEntity<UserLoginSuccessDto> verifyOtp(final OtpVerificationRequestDto otpVerificationRequestDto) {
         User user = userRepository.findByEmailId(otpVerificationRequestDto.getEmailId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email-id"));
-
-        if (!user.isEmailVerified()) {
-            user.setEmailVerified(true);
-            user = userRepository.save(user);
-        }
 
         Integer storedOneTimePassword = null;
         try {
@@ -77,11 +79,34 @@ public class UserService {
         }
 
         if (storedOneTimePassword != null) {
-            if (storedOneTimePassword.equals(otpVerificationRequestDto.getOneTimePassword()))
+            if (storedOneTimePassword.equals(otpVerificationRequestDto.getOneTimePassword())) {
+                if (otpVerificationRequestDto.getContext().equals(OtpContext.SIGN_UP)) {
+                    user.setEmailVerified(true);
+                    user = userRepository.save(user);
+                }
+                if (otpVerificationRequestDto.getContext().equals(OtpContext.ACCOUNT_DELETION)) {
+                    user.setActive(false);
+                    user = userRepository.save(user);
+                }
                 return ResponseEntity.ok(UserLoginSuccessDto.builder().jwt(jwtUtils.generateToken(user)).build());
+            }
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         } else
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+    }
+
+    public ResponseEntity<?> deleteAccount(final UUID userId) {
+        final var user = userRepository.findById(userId).get();
+        sendOtp(user, "2FA: Confirm account Deletion");
+        return ResponseEntity.ok().build();
+    }
+
+    public ResponseEntity<?> getDetails(final UUID userId) {
+        final var user = userRepository.findById(userId).get();
+        final var response = new HashMap<String, String>();
+        response.put("email_id", user.getEmailId());
+        response.put("created_at", user.getCreatedAt().toString());
+        return ResponseEntity.ok(response);
     }
 
     private void sendOtp(final User user, final String subject) {

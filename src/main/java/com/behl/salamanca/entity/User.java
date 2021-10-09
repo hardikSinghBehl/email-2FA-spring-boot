@@ -33,8 +33,11 @@ public class User implements Serializable {
     @Column(name = "password", nullable = false)
     private String password;
 
-    @Column(name = "email_verified")
+    @Column(name = "email_verified", nullable = false)
     private boolean isEmailVerified;
+
+    @Column(name = "is_active", nullable = false)
+    private boolean isActive;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
