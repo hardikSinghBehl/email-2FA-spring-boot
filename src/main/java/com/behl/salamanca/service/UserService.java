@@ -1,6 +1,7 @@
 package com.behl.salamanca.service;
 
 import java.util.Random;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 import org.springframework.http.HttpStatus;
@@ -95,7 +96,10 @@ public class UserService {
         final var otp = new Random().ints(1, 100000, 999999).sum();
         oneTimePasswordCache.put(user.getEmailId(), otp);
 
-        emailService.sendEmail(user.getEmailId(), subject, "OTP: " + otp);
+        CompletableFuture.supplyAsync(() -> {
+            emailService.sendEmail(user.getEmailId(), subject, "OTP: " + otp);
+            return HttpStatus.OK;
+        });
     }
 
 }
