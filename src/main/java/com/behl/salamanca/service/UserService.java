@@ -9,7 +9,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.behl.salamanca.constant.OtpContext;
 import com.behl.salamanca.dto.OtpVerificationRequestDto;
 import com.behl.salamanca.dto.UserAccountCreationRequestDto;
 import com.behl.salamanca.dto.UserLoginRequestDto;
@@ -63,7 +62,7 @@ public class UserService {
         User user = userRepository.findByEmailId(otpVerificationRequestDto.getEmailId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email-id"));
 
-        if (otpVerificationRequestDto.getContext().equals(OtpContext.SIGN_UP)) {
+        if (!user.isEmailVerified()) {
             user.setEmailVerified(true);
             user = userRepository.save(user);
         }
