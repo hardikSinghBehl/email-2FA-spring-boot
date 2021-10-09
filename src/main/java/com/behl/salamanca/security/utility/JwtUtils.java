@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -57,12 +58,12 @@ public class JwtUtils {
         claims.put("user_id", user.getId());
         claims.put("email_id", user.getEmailId());
         claims.put("email_verified", user.isEmailVerified());
-        return createToken(claims, user.getEmailId(), 3600000l); // 1 hour expiration
+        return createToken(claims, user.getEmailId(), TimeUnit.HOURS.toMillis(1));
     }
 
     public String generateRefreshToken(final User user) {
         Map<String, Object> claims = new HashMap<>();
-        return createToken(claims, user.getEmailId(), 1296000000l); // 15 days expiration
+        return createToken(claims, user.getEmailId(), TimeUnit.DAYS.toMillis(15));
     }
 
     private String createToken(final Map<String, Object> claims, final String subject, final Long expiration) {
