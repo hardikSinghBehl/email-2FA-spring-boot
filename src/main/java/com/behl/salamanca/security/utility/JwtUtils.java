@@ -47,22 +47,27 @@ public class JwtUtils {
                 .parseClaimsJws(token.replace("Bearer ", "")).getBody();
     }
 
-    private Boolean isTokenExpired(final String token) {
+    public Boolean isTokenExpired(final String token) {
         return extractExpiration(token).before(new Date());
     }
 
-    public String generateToken(final User user) {
+    public String generateAccessToken(final User user) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("account_creation_timestamp", user.getCreatedAt().toString());
         claims.put("user_id", user.getId());
         claims.put("email_id", user.getEmailId());
         claims.put("email_verified", user.isEmailVerified());
-        return createToken(claims, user.getEmailId());
+        return createToken(claims, user.getEmailId(), 3600000l); // 1 hour expiration
     }
 
-    private String createToken(final Map<String, Object> claims, final String subject) {
+    public String generateRefreshToken(final User user) {
+        Map<String, Object> claims = new HashMap<>();
+        return createToken(claims, user.getEmailId(), 1296000000l); // 15 days expiration
+    }
+
+    private String createToken(final Map<String, Object> claims, final String subject, final Long expiration) {
         return Jwts.builder().setClaims(claims).setSubject(subject).setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10))
+                .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(SignatureAlgorithm.HS256, jwtConfigurationProperties.getJwt().getSecretKey()).compact();
     }
 

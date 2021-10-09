@@ -4,11 +4,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.behl.salamanca.dto.OtpVerificationRequestDto;
+import com.behl.salamanca.dto.TokenRefreshRequestDto;
 import com.behl.salamanca.dto.UserAccountCreationRequestDto;
 import com.behl.salamanca.dto.UserLoginRequestDto;
 import com.behl.salamanca.dto.UserLoginSuccessDto;
@@ -45,6 +47,14 @@ public class AuthenticationController {
     public ResponseEntity<UserLoginSuccessDto> otpVerificationHandler(
             @RequestBody(required = true) final OtpVerificationRequestDto otpVerificationRequestDto) {
         return userService.verifyOtp(otpVerificationRequestDto);
+    }
+
+    @PutMapping(value = "/refresh-token", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseStatus(value = HttpStatus.OK)
+    @Operation(summary = "Returns new access_token")
+    public ResponseEntity<?> tokenRefresherHandler(
+            @RequestBody(required = true) final TokenRefreshRequestDto tokenRefreshRequestDto) {
+        return userService.refreshToken(tokenRefreshRequestDto);
     }
 
 }

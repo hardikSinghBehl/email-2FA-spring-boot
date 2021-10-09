@@ -15,6 +15,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.behl.salamanca.constant.OtpContext;
 import com.behl.salamanca.dto.OtpVerificationRequestDto;
+import com.behl.salamanca.dto.TokenRefreshRequestDto;
 import com.behl.salamanca.dto.UserAccountCreationRequestDto;
 import com.behl.salamanca.dto.UserLoginRequestDto;
 import com.behl.salamanca.dto.UserLoginSuccessDto;
@@ -85,7 +86,8 @@ public class UserService {
                     user.setEmailVerified(true);
                     user = userRepository.save(user);
                     return ResponseEntity
-                            .ok(UserLoginSuccessDto.builder().accessToken(jwtUtils.generateToken(user)).build());
+                            .ok(UserLoginSuccessDto.builder().accessToken(jwtUtils.generateAccessToken(user))
+                                    .refreshToken(jwtUtils.generateRefreshToken(user)).build());
                 }
                 if (otpVerificationRequestDto.getContext().equals(OtpContext.ACCOUNT_DELETION)) {
                     user.setActive(false);
@@ -135,6 +137,15 @@ public class UserService {
         response.put("message",
                 "OTP sent successfully sent to your registered email-address. verify it using /verify-otp endpoint");
         return response;
+    }
+
+    public ResponseEntity<?> refreshToken(final TokenRefreshRequestDto tokenRefreshRequestDto) {
+        if (jwtUtils.isTokenExpired(tokenRefreshRequestDto.getRefreshToken()))
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Refresh token has expired");
+        final var user = userRepository.findByEmailId(jwtUtils.extractEmail(tokenRefreshRequestDto.getRefreshToken()))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST));
+        return ResponseEntity.ok(UserLoginSuccessDto.builder().refreshToken(tokenRefreshRequestDto.getRefreshToken())
+                .accessToken(jwtUtils.generateAccessToken(user)).build());
     }
 
 }

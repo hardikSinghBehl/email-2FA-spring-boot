@@ -7,9 +7,8 @@ import lombok.extern.jackson.Jacksonized;
 @Getter
 @Builder
 @Jacksonized
-public class UserLoginSuccessDto {
+public class TokenRefreshRequestDto {
 
-    private final String accessToken;
     private final String refreshToken;
 
 }
