@@ -84,7 +84,8 @@ public class UserService {
                 if (otpVerificationRequestDto.getContext().equals(OtpContext.SIGN_UP)) {
                     user.setEmailVerified(true);
                     user = userRepository.save(user);
-                    return ResponseEntity.ok(UserLoginSuccessDto.builder().jwt(jwtUtils.generateToken(user)).build());
+                    return ResponseEntity
+                            .ok(UserLoginSuccessDto.builder().accessToken(jwtUtils.generateToken(user)).build());
                 }
                 if (otpVerificationRequestDto.getContext().equals(OtpContext.ACCOUNT_DELETION)) {
                     user.setActive(false);
