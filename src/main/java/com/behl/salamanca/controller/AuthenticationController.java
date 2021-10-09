@@ -23,7 +23,7 @@ public class AuthenticationController {
 
     private final UserService userService;
 
-    @PostMapping(value = "/sign-up")
+    @PostMapping(value = "/sign-up", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(value = HttpStatus.OK)
     @Operation(summary = "Creates a user account in the system")
     public ResponseEntity<?> userAccountCreationHandler(
@@ -31,7 +31,7 @@ public class AuthenticationController {
         return userService.createAccount(userAccountCreationRequestDto);
     }
 
-    @PostMapping(value = "/login")
+    @PostMapping(value = "/login", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(value = HttpStatus.OK)
     @Operation(summary = "Endpoint to authenticate users credentials")
     public ResponseEntity<?> userLoginHandler(

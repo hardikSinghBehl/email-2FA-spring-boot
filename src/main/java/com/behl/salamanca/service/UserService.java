@@ -1,6 +1,7 @@
 package com.behl.salamanca.service;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -49,7 +50,7 @@ public class UserService {
         final var savedUser = userRepository.save(user);
 
         sendOtp(savedUser, "Verify your account");
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(getOtpSendMessage());
     }
 
     public ResponseEntity<?> login(final UserLoginRequestDto userLoginRequestDto) {
@@ -63,7 +64,7 @@ public class UserService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Account not active");
 
         sendOtp(user, "2FA: Request to log in to your account");
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(getOtpSendMessage());
     }
 
     public ResponseEntity<UserLoginSuccessDto> verifyOtp(final OtpVerificationRequestDto otpVerificationRequestDto) {
@@ -98,7 +99,7 @@ public class UserService {
     public ResponseEntity<?> deleteAccount(final UUID userId) {
         final var user = userRepository.findById(userId).get();
         sendOtp(user, "2FA: Confirm account Deletion");
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(getOtpSendMessage());
     }
 
     public ResponseEntity<?> getDetails(final UUID userId) {
@@ -125,6 +126,13 @@ public class UserService {
             emailService.sendEmail(user.getEmailId(), subject, "OTP: " + otp);
             return HttpStatus.OK;
         });
+    }
+
+    private Map<String, String> getOtpSendMessage() {
+        final var response = new HashMap<String, String>();
+        response.put("message",
+                "OTP sent successfully sent to your registered email-address. verify it using /verify-otp endpoint");
+        return response;
     }
 
 }
