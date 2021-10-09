@@ -9,6 +9,6 @@ import lombok.extern.jackson.Jacksonized;
 @Jacksonized
 public class UserLoginSuccessDto {
 
-    private final String jwt;
+    private final String accessToken;
 
 }
